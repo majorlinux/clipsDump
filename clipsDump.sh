@@ -8,7 +8,7 @@ done < clientID.txt
 while read STRING2
 do
 	broadcasterid=$STRING2
-done < broadcasterid.tx
+done < broadcasterid.txt
 
 url="$(curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100&started_at=2018-01-01T00:00:00Z&ended_at=2018-12-31T00:00:00Z' | jq -r '.data[] | .url')" > /dev/null
 
