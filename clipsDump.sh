@@ -57,14 +57,17 @@ fi
 
 broadcasterid="$(curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/users?login='$streamer'' | jq -r '.data[] | .id')" > /dev/null
 
-if [ -z startDate ]
+
+
+if [ -z $startDate ]
 then
 	printf 'Please enter the Twitch clip dump starting date in UTC (Format: 2019-01-30T22:19:54Z or "all" for all clips): '
 	read -r startDate
 fi
 
-if [ $startDate == "all" ]
+if [ "$startDate" == "all" ]
 then
+	echo $startDate
 	if [ "$list" == "true" ]
 	then
 		curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100' | jq -r '.data[] | .url'
@@ -102,10 +105,10 @@ else
 		read -r endDate
 	fi
 
-	if [ $list == "true" ]
+	if [ "$list" == "true" ]
 	then
 		curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100&started_at='$startDate'&ended_at='$endDate'' | jq -r '.data[] | .url'
-	elif [ $save == "true" ]
+	elif [ "$save" == "true" ]
 	then
 		curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100&started_at='$startDate'&ended_at='$endDate'' | jq -r '.data[] | .url' | tee $location > /dev/null
 	else
