@@ -1,6 +1,6 @@
 #!/bin/bash
 
-while getopts "ab:c:e:ls:f:" OPTION
+while getopts "ab:c:e:ls:f:h" OPTION
 do
 	case "$OPTION" in
 		c)
@@ -11,10 +11,8 @@ do
 		;;
 		s)
 		startDate=$OPTARG
-		endDate=2999-12-31T23:59:59Z
 		;;
 		e)
-		startDate=1970-01-01T00:00:00Z
 		endDate=$OPTARG
 		;;
 		b)
@@ -29,8 +27,22 @@ do
 		f)
 		save=true
 		location=$OPTARG
+		;;
+		h)
+		echo "-a: Downloads all clips for user"
+		echo "-b: Provide streamer's username"
+		echo "-c: Provide Twitch API client ID file"
+		echo "-e: Set clip dump end date"
+		echo "-f: Save clip URLs to file"
+		echo "-h: Help"
+		echo "-l: List Twitch clip URLs"
+		echo "-s: Set clip dump start date"
+		exit 1
 	esac
 done
+
+echo $startDate
+echo $endDate
 
 if [ -z "$clientid" ]
 then
@@ -77,7 +89,7 @@ then
 	else
 		url="$(curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100' | jq -r '.data[] | .url')"
 
-		youtube-dl -o  "./%(title)s.%(ext)s" $url
+		youtube-dl -o  "./%(title)s."$clipID".%(ext)s" $url
 	fi
 
 	page="$(curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100' | jq -r '.pagination.cursor')"
@@ -92,7 +104,7 @@ then
 		else
 			url="$(curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100&after='$page'' | jq -r '.data[] | .url')"
 
-			youtube-dl -o  "./%(title)s.%(ext)s" $url
+			youtube-dl -o   "./%(title)s."$clipID".%(ext)s" $url
 		fi
 
 		page="$(curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&after='$page'' | jq -r '.pagination.cursor')"
@@ -121,16 +133,16 @@ else
 
 	while [ $page != 'null' ]
 	do
-		if [ $list == "true" ]
+		if [ "$list" == "true" ]
 		then
 			curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100&started_at='$startDate'&ended_at='$endDate'&after='$page'' | jq -r '.data[] | .url'
-		elif [ $save == "true" ]
+		elif [ "$save" == "true" ]
 		then
 			curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100&started_at='$startDate'&ended_at='$endDate'&after='$page'' | jq -r '.data[] | .url' | tee -a $location > /dev/null
 		else
 			url="$(curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100&started_at='$startDate'&ended_at='$endDate'&after='$page'' | jq -r '.data[] | .url')" > /dev/null
 
-			youtube-dl -o  "./%(title)s.%(ext)s" $url
+			youtube-dl -o  "./%(title)s."$clipID".%(ext)s" $url
 		fi
 
 		page="$(curl -s -H 'Client-ID:'$clientid'' -X GET 'https://api.twitch.tv/helix/clips?broadcaster_id='$broadcasterid'&first=100&started_at='$startDate'&ended_at='$endDate'&after='$page'' | jq -r '.pagination.cursor')"
